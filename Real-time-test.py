@@ -1,43 +1,38 @@
 import cv2
-import supervision as sv
 from ultralytics import YOLO
 
-# Only one class: Gun
-class_names = ["Gun"]
+# Load your trained YOLO model
+model = YOLO("best.pt")  # Replace with the path to the best.pt model on your desktop
 
-# Load the model
-model = YOLO("best.pt")
-
-# Initialize webcam
+# Start capturing video from the laptop's camera (use 0 for the default webcam)
 cap = cv2.VideoCapture(0)
 
-# Annotators
-bounding_box_annotator = sv.RoundBoxAnnotator()
-label_annotator = sv.LabelAnnotator()
+# Check if the camera is opened correctly
+if not cap.isOpened():
+    print("Error: Could not open the camera.")
+    exit()
 
 while True:
+    # Capture frame-by-frame
     ret, frame = cap.read()
+
     if not ret:
+        print("Error: Failed to grab frame.")
         break
 
-    # Detect objects with confidence threshold
-    results = model(frame, conf=0.5)[0]
-    detections = sv.Detections.from_ultralytics(results)
+    # Perform inference on the captured frame
+    results = model(frame)  # Run detection on the frame
 
-    # Prepare labels with class name and confidence
-    labels = [f"{class_names[int(c)]}: {conf:.2f}" 
-              for c, conf in zip(detections.class_id, detections.confidence)]
+    # Annotate the frame with bounding boxes for the detected objects
+    annotated_frame = results[0].plot()
 
-    # Annotate the frame
-    annotated_image = bounding_box_annotator.annotate(scene=frame, detections=detections)
-    annotated_image = label_annotator.annotate(scene=annotated_image, detections=detections, labels=labels)
+    # Display the resulting frame
+    cv2.imshow("Object Detection (Gun Detection)", annotated_frame)
 
-    # Show the annotated frame
-    cv2.imshow("YOLO Object Detection", annotated_image)
-
-    if cv2.waitKey(1) % 256 == 27:  # ESC key
-        print("Escape hit, closing...")
+    # Press 'q' to exit the camera window
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# Release the camera and close OpenCV windows
 cap.release()
 cv2.destroyAllWindows()
