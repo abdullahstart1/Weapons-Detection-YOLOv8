@@ -16,4 +16,4 @@ This project detects **guns** in images using **YOLOv8** and a custom dataset fr
 ## ⚡ Requirements
 
 ```bash
-pip install ultralytics roboflow opencv-python matplotlib
+pip install ultralytics roboflow opencv-python matplotlib supervision 
